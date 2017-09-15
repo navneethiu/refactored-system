@@ -1,0 +1,80 @@
+---
+title: "Parliament Elections Analysis 1951 - 2009"
+author: "Navneeth I U"
+date: "15 September 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, warning=FALSE}
+parliament = read.csv("C://Users//Administrator//Documents//EDA//CSV//parliament.csv")
+library(knitr)
+library(dplyr)
+library(zoo)
+library(ggplot2)
+View(parliament)
+```
+
+### Percentage of null values in all column 
+```{r}
+col.na= colSums(is.na(parliament))*100/nrow(parliament)
+col.na
+```
+
+### Percentage of data availability 
+```{r}
+col.na= colSums(!is.na(parliament))*100/nrow(parliament)
+col.na
+```
+
+### Identify year wise total number of electors and voters? Also compute percentage of voters.
+```{r, message=FALSE, warning=FALSE}
+Total_electors_voters = parliament %>% group_by(YEAR) %>% summarise(TOTAL_VOTERS=sum(VOTES,na.rm=TRUE), TOTAL_ELECTORS=sum(unique(ELECTORS),na.rm=TRUE),PERCENT_VOTERS=(TOTAL_VOTERS/TOTAL_ELECTORS*100))
+kable(Total_electors_voters)
+```
+
+####In the above output we can observe that the voters per election does not exceed 70% 
+
+
+### Identify year wise percentage of male and female candidates?
+```{r, message=FALSE, warning=FALSE}
+parliament = parliament %>% mutate(Male = if_else(SEX=="M",1,0))
+parliament = parliament %>% mutate(Female = if_else(SEX=="F",1,0))
+Year_wise_candidates = parliament %>% group_by(YEAR) %>% summarise(PERCENT_MALE = sum(Male)/n()*100, PERCENT_FEMALE = sum(Female)/n()*100)
+kable(Year_wise_candidates)
+```
+
+#### In the output we observe that male candidates in every election exceeds 90% and in the year 1971 there was zero female candidates
+
+
+### Compute partywise total number of candidates won so far? Display top ten parties alone
+```{r, message=FALSE, warning=FALSE}
+Top_parties = parliament %>% filter(Position==1) %>% group_by(PARTY) %>% summarise(CONSTITUENCY_VICTORIES = n()) %>% arrange(-CONSTITUENCY_VICTORIES)
+kable(Top_parties[1:10,])
+```
+
+#### We can observe that Patry INC has won most number of constituencies by a huge margin
+
+
+### Identify yearwise which party has won (based on total number of constituencies won)
+```{r, message=FALSE, warning=FALSE}
+Year_result = parliament %>% filter(Position==1) %>% group_by(YEAR,PARTY) %>% summarise(CONSTITUENCIES_WON = n()) %>% filter(CONSTITUENCIES_WON==max(CONSTITUENCIES_WON))
+kable(Year_result)
+```
+
+#### We can see from the output that the party INC has won the most number of elections in years 1951-2009
+
+
+### Identify yearwise percentage of winning for female candidates?
+```{r, message=FALSE, warning=FALSE}
+Female_results = parliament %>% filter(Position==1) %>% group_by(YEAR) %>% summarise(PERCENT_FEMALE_WON = sum(Female)/n()*100)
+kable(Female_results)
+```
+
+#### In this output we can see that highest number of female candidates to win the election was in the year 1992 
+
+
+
